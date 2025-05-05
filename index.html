@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Verifier</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+    h1 {
+      color: #333;
+    }
+    #reader {
+      width: 300px;
+      margin: auto;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      display: inline-block;
+    }
+    .valid {
+      background-color: #c8e6c9;
+      color: #256029;
+    }
+    .invalid {
+      background-color: #ffcdd2;
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Verifier</h1>
+  <div id="reader"></div>
+  <div id="result"></div>
+
+  <script>
+
+    let validCodes = {};
+
+          fetch('qr_codes.json')
+  .then(response => response.json())
+  .then(data => {
+    validCodes = data;
+    console.log("✅ QR codes loaded");
+  })
+  .catch(error => {
+    console.error("❌ Failed to load QR codes:", error);
+  });
+
+      
+
+    function showResult(qrCode) {
+      const resultDiv = document.getElementById("result");
+      if (validCodes[qrCode]) {
+        const person = validCodes[qrCode];
+        resultDiv.innerHTML = `✅ Valid Ticket!<br>Name: ${person.name}<br>Roll: ${person.roll}`;
+        resultDiv.className = "valid";
+      } else {
+        resultDiv.innerHTML = `❌ Invalid or Unknown QR Code: ${qrCode}`;
+        resultDiv.className = "invalid";
+      }
+    }
+
+    const qrScanner = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: 250 };
+
+    qrScanner.start(
+      { facingMode: "environment" },
+      config,
+      qrCodeMessage => {
+        qrScanner.stop().then(() => {
+          showResult(qrCodeMessage);
+          setTimeout(() => window.location.reload(), 3000); // Reload to scan next
+        });
+      },
+      errorMessage => {
+        // Optional: Handle scan errors here
+      }
+    ).catch(err => {
+      document.getElementById("result").innerHTML = `Camera Error: ${err}`;
+      document.getElementById("result").className = "invalid";
+    });
+  </script>
+</body>
+</html>
